@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Logs
+logs/*.log
+logs/*.txt
+*.log
+
+# Data (if sensitive)
+data/*.csv
+!data/.gitkeep
+data/*.json
+*.json
+
+# Mac
+.DS_Store
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+secrets.env

@@ -1,0 +1,14 @@
+python-decouple==3.8
+sshtunnel>=0.4.0,<1.0.0
+paramiko>=2.12.0,<4.0.0
+sqlalchemy==2.0.44
+pandas==2.3.3
+psycopg2-binary==2.9.11
+pymsteams==0.2.5
+
+# Testing dependencies
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+freezegun==1.4.0
+duckdb>=0.9.0

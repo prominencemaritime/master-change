@@ -1,0 +1,66 @@
+# Vim swap files
+*.swp
+*.swo
+.*.swp
+.*.swo
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs (generate fresh in container)
+logs/
+*.log
+
+# Documentation
+docs/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Environment file backups
+.env.swp
+.env.swo
+.env.bak
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Data files (mount as volume instead)
+data/*.csv
+
+
+secrets.env

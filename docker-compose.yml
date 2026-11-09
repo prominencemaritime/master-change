@@ -1,0 +1,17 @@
+services:
+  alerts:
+    build:
+      context: .
+      args:
+        UID: ${UID}
+        GID: ${GID}
+    container_name: masters-navigation-audit-app
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./queries:/app/queries
+      - /Users/prominence/.ssh/prominence_user_key_rsa4096:/app/ssh_key:ro
+      - /Users/prominence/.ssh/datalab_prominence_prod.pem:/app/ssh_ubuntu_key:ro
+    restart: unless-stopped

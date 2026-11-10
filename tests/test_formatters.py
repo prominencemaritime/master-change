@@ -68,31 +68,6 @@ def test_html_formatter_displays_only_specified_columns(mock_config, sample_data
     assert 'Rank' in html
 
 
-def test_route_notifications_adds_urls(mock_config, sample_dataframe):
-    """Test that route_notifications adds url column when links enabled."""
-    from src.alerts.masters_navigation_audit import MastersNavigationAuditAlert
-    
-    # Enable links
-    mock_config.enable_links = True
-    mock_config.base_url = 'https://test.com'
-    mock_config.url_path = '/events'
-    
-    alert = MastersNavigationAuditAlert(mock_config)
-    jobs = alert.route_notifications(sample_dataframe)
-    
-    # Check that url column was added
-    for job in jobs:
-        data = job['data']
-        
-        # Should have url column
-        assert 'url' in data.columns
-        
-        # Each URL should be properly formatted
-        for idx, row in data.iterrows():
-            expected_url = f"https://test.com/events/{row['crew_contract_id']}"  # Uses crew_contract_id
-            assert row['url'] == expected_url
-
-
 def test_text_formatter_generates_plain_text(mock_config, sample_dataframe):
     """Test that text formatter generates plain text."""
     formatter = TextFormatter()

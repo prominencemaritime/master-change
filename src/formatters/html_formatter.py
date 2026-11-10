@@ -5,7 +5,8 @@ HTML email formatter with rich styling and company branding.
 Generates professional HTML emails with embedded logos, tables,
 and responsive design.
 """
-from typing import Dict, Optional
+from typing import Dict, List, Optional
+from html import escape as html_escape
 import pandas as pd
 from datetime import datetime
 from src.formatters.date_formatter import duration_hours
@@ -370,8 +371,13 @@ class HTMLFormatter:
         </div>
 """
 
+            # Alert-specific intro paragraphs replace the Master's Navigation Audit welcome message
+            intro_paragraphs = metadata.get('intro_paragraphs')
+            if intro_paragraphs:
+                html += self._build_intro_html(intro_paragraphs)
+
             # Add welcome message if captain surname is available
-            captain_surname = self._extract_captain_surname(df)
+            captain_surname = '' if intro_paragraphs else self._extract_captain_surname(df)
             if captain_surname:
                 html += f"""
         <div style="background-color: #fff; padding: 20px; border-left: 4px solid #2EA9DE; margin-bottom: 25px; line-height: 1.8;">
@@ -441,6 +447,24 @@ class HTMLFormatter:
         
         return html
     
+
+    def _build_intro_html(self, paragraphs: List[str]) -> str:
+        """
+        Build the intro block from alert-supplied plain-text paragraphs.
+
+        Uses the same styling as the Master's Navigation Audit welcome message.
+        Each paragraph is HTML-escaped, so alerts pass plain text.
+        """
+        body = "\n".join(
+           f'            <p style="margin: 10px 0;">{html_escape(str(p))}</p>'
+           for p in paragraphs
+        )
+        return f"""
+        <div style="background-color: #fff; padding: 20px; border-left: 4px solid #2EA9DE; margin-bottom: 25px; line-height: 1.8;">
+{body}
+        </div>
+"""
+
 
     def _build_logos_html(self, config: 'AlertConfig') -> str:
         """

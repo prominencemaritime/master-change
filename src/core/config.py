@@ -62,6 +62,7 @@ class AlertConfig:
     # Alert-specific configurations
     lookback_days: int
     rank_id: str
+    master_change_days: int
 
     # Tracking
     reminder_frequency_days: Union[float, None]
@@ -167,8 +168,9 @@ class AlertConfig:
             url_path=config('URL_PATH', default='/events'),
 
             # Alert-specific configurations
-            lookback_days=int(config('LOOKBACK_DAYS', default=1)),
-            rank_id=str(config('RANK_ID', default='1')),
+            lookback_days=int(config('LOOKBACK_DAYS', default=40)),
+            rank_id=int(config('RANK_ID', default=1)),
+            master_change_days=int(config('MASTER_CHANGE_DAYS', default=14)),
 
             # Dry-run settings (don't set dry_run here, it's set by CLI flag in main.py)
             dry_run_email=config('DRY_RUN_EMAIL', default='').strip(),
@@ -196,9 +198,11 @@ class AlertConfig:
         """
         return {
             'prominencemaritime.com': {
+                'to': AlertConfig._parse_email_list('PROMINENCE_EMAIL_TO_RECIPIENTS'),
                 'cc': AlertConfig._parse_email_list('PROMINENCE_EMAIL_CC_RECIPIENTS')
             },
             'seatraders.com': {
+                'to': AlertConfig._parse_email_list('SEATRADERS_EMAIL_TO_RECIPIENTS'),
                 'cc': AlertConfig._parse_email_list('SEATRADERS_EMAIL_CC_RECIPIENTS')
             }
         }

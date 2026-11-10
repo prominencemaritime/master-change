@@ -30,7 +30,7 @@ from src.formatters.html_formatter import HTMLFormatter
 from src.formatters.text_formatter import TextFormatter
 
 # Import alert implementations
-from src.alerts.masters_navigation_audit import MastersNavigationAuditAlert
+from src.alerts.master_change import MasterChangeAlert
 
 
 def setup_logging(config: AlertConfig) -> logging.Logger:
@@ -132,9 +132,9 @@ def register_alerts(scheduler: AlertScheduler, config: AlertConfig) -> None:
     logger = logging.getLogger(__name__)
     
     # Register Flag Dispensations Alert
-    masters_navigation_audit_alert = MastersNavigationAuditAlert(config)
-    scheduler.register_alert(masters_navigation_audit_alert.run)
-    logger.info("[OK] Registered MastersNavigationAuditAlert")
+    master_change_alert = MasterChangeAlert(config)
+    scheduler.register_alert(master_change_alert.run)
+    logger.info("[OK] Registered MasterChangeAlert")
     
     # Future alerts can be registered here:
     # hot_works_alert = HotWorksAlert(config)

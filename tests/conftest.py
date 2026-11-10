@@ -13,7 +13,6 @@ from unittest.mock import Mock, MagicMock
 from src.core.config import AlertConfig
 from src.core.tracking import EventTracker
 from src.core.scheduler import AlertScheduler
-from src.alerts.masters_navigation_audit import MastersNavigationAuditAlert
 
 
 @pytest.fixture
@@ -42,6 +41,8 @@ def mock_config(temp_dir, monkeypatch):
     monkeypatch.setenv('INTERNAL_RECIPIENTS', 'internal@test.com')
     monkeypatch.setenv('PROMINENCE_EMAIL_CC_RECIPIENTS', 'prom1@test.com,prom2@test.com')
     monkeypatch.setenv('SEATRADERS_EMAIL_CC_RECIPIENTS', 'sea1@test.com,sea2@test.com')
+    monkeypatch.setenv('PROMINENCE_EMAIL_TO_RECIPIENTS', 'ict@prominencemaritime.com')
+    monkeypatch.setenv('SEATRADERS_EMAIL_TO_RECIPIENTS', 'ict@seatraders.com')
     
     monkeypatch.setenv('ENABLE_EMAIL_ALERTS', 'True')
     monkeypatch.setenv('ENABLE_TEAMS_ALERTS', 'False')
@@ -51,7 +52,8 @@ def mock_config(temp_dir, monkeypatch):
     monkeypatch.setenv('REMINDER_FREQUENCY_DAYS', '')  # None
     
     monkeypatch.setenv('BASE_URL', 'https://test.orca.tools')
-    monkeypatch.setenv('LOOKBACK_DAYS', '4')
+    monkeypatch.setenv('LOOKBACK_DAYS', '40')
+    monkeypatch.setenv('MASTER_CHANGE_DAYS', '14')
     monkeypatch.setenv('RANK_ID', '1')
     monkeypatch.setenv('ENABLE_LINKS', 'True')
     monkeypatch.setenv('URL_PATH', '/events')
@@ -72,7 +74,7 @@ def mock_config(temp_dir, monkeypatch):
 
 @pytest.fixture
 def sample_dataframe():
-    """Create sample Masters Navigation Audit DataFrame with correct schema."""
+    """Create sample Master Change DataFrame with correct schema."""
     data = {
         'crew_contract_id': [48941, 48942, 48943, 48944],
         'crew_member_id': [201, 202, 203, 204],
@@ -98,7 +100,14 @@ def sample_dataframe():
             (datetime.now() - timedelta(days=2) + timedelta(days=14)).date(),
             (datetime.now() - timedelta(hours=12) + timedelta(days=14)).date(),
             (datetime.now() - timedelta(hours=6) + timedelta(days=14)).date()
-        ]
+        ],
+        'outgoing_master': ['Peter Old', 'Paul Old', 'Mary Old', None],
+        'outgoing_sign_off_date': [
+            datetime.now() - timedelta(days=1, hours=2),
+            datetime.now() - timedelta(days=2, hours=2),
+            datetime.now() - timedelta(hours=14),
+            None
+       ]
     }
     return pd.DataFrame(data)
 

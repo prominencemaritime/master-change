@@ -5,7 +5,7 @@ services:
       args:
         UID: ${UID}
         GID: ${GID}
-    container_name: masters-navigation-audit-app
+    container_name: master-change-app
     env_file:
       - .env
     volumes:

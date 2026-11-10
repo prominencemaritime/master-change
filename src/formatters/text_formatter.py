@@ -57,7 +57,10 @@ class TextFormatter:
         if df.empty:
             text += "No records found for the current query.\n"
         else:
-            text += f"Found {len(df)} record(s):\n\n"
+            # Alert-specific intro paragraphs (optional)
+            for paragraph in metadata.get('intro_paragraphs') or []:
+                text += f"{paragraph}\n\n"
+                text += f"Found {len(df)} record(s):\n\n"
 
             # Determine which columns to display
             display_columns = metadata.get('display_columns', list(df.columns))
@@ -65,8 +68,8 @@ class TextFormatter:
             display_columns = [col for col in display_columns if col in df.columns]
 
             # Add each record
-            for idx, row in df.iterrows():
-                text += f"Record {idx + 1}:\n"
+            for record_num, (_, row) in enumerate(df.iterrows(), start=1):
+                text += f"Record {record_num}:\n"
                 text += "-" * 70 + "\n"
 
                 for col in display_columns:

@@ -1,5 +1,5 @@
 #src/alerts/__init__.py
 """Alert implementations."""
-from .masters_navigation_audit import MastersNavigationAuditAlert
+from .master_change import MasterChangeAlert
 
-__all__ = ['MastersNavigationAuditAlert']
+__all__ = ['MasterChangeAlert']

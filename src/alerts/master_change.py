@@ -279,9 +279,8 @@ class MasterChangeAlert(BaseAlert):
         """
         sign_on_day = str(row['sign_on_date']).split(' ')[0]
         paragraphs = [
-            "Dear Colleagues,",
-            f"Captain {row['full_name']} assumed command of {row['vessel']} on {sign_on_day}. "
-            f"{self.master_change_days} days have elapsed and no other Master remains on the crew list.",
+            "Dear ICT,",
+            f"{self.master_change_days} days have elapsed since Captain {row['full_name']} assumed command of {row['vessel']} (on {sign_on_day}). There is currently no other Master in the crew list. ",
         ]
 
         outgoing_master = row.get('outgoing_master', '')
@@ -295,7 +294,7 @@ class MasterChangeAlert(BaseAlert):
         else:
             paragraphs.append("No previous Master contract was found for this vessel.")
 
-        paragraphs.append("Please carry out the actions associated with a change of Master, such as password changes.")
+        paragraphs.append("Please carry out any pending actions associated with a change of Master (such as password changes, etc.).")
         return paragraphs
 
 

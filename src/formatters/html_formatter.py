@@ -94,8 +94,8 @@ class HTMLFormatter:
         vessel_name = metadata.get('vessel_name', 'vessel')
         company_name = metadata.get('company_name', 'Prominence Maritime S.A.')
         
-        # Determine which logos are available
-        logos_html = self._build_logos_html(config)
+        # Determine which logos are available (only the alert's companies, if it says which)
+        logos_html = self._build_logos_html(config, metadata.get('logo_keys'))
         
         # Build the HTML
         # -apple-system, BlinkMacSystemFont
@@ -466,12 +466,13 @@ class HTMLFormatter:
 """
 
 
-    def _build_logos_html(self, config: 'AlertConfig') -> str:
+    def _build_logos_html(self, config: 'AlertConfig', logo_keys: Optional[List[str]] = None) -> str:
         """
         Build HTML for company logos based on which are available.
         
         Args:
             config: AlertConfig instance
+            logo_keys: company_logos keys to show (e.g. ['prominence']); None shows all
             
         Returns:
             HTML string with img tags for available logos
@@ -479,6 +480,8 @@ class HTMLFormatter:
         logos_html = ""
         
         for company_name, logo_path in config.company_logos.items():
+            if logo_keys is not None and company_name not in logo_keys:
+                continue
             if logo_path.exists():
                 # CID format matches what EmailSender uses
                 cid = f"{company_name}_logo"

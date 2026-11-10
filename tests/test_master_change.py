@@ -400,6 +400,74 @@ def test_text_contains_intro_and_numbers_records_from_one(alert, mc_config):
 
 
 # ---------------------------------------------------------------------------
+# Company logo
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def logo_files(mc_config):
+    """Create the configured logo files so the formatter and sender find them."""
+    for path in mc_config.company_logos.values():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b'\x89PNG\r\n\x1a\n' + b'0' * 16)
+    return mc_config.company_logos
+
+
+@pytest.mark.parametrize('vsl_email, expected', [
+    ('vessel@prominencemaritime.com', ['prominence']),
+    ('vessel@vsl.seatraders.com', ['seatraders']),
+])
+def test_route_sets_company_logo(alert, vsl_email, expected):
+    job = alert.route_notifications(alert.filter_data(make_df(raw_row(vsl_email=vsl_email))))[0]
+    assert job['metadata']['logo_keys'] == expected
+
+
+@pytest.mark.parametrize('vsl_email, shown, hidden', [
+    ('vessel@prominencemaritime.com', 'prominence', 'seatraders'),
+    ('vessel@seatraders.com', 'seatraders', 'prominence'),
+])
+def test_html_shows_only_company_logo(alert, mc_config, logo_files, vsl_email, shown, hidden):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    from src.formatters.html_formatter import HTMLFormatter
+
+    job = alert.route_notifications(alert.filter_data(make_df(raw_row(vsl_email=vsl_email))))[0]
+    html = HTMLFormatter().format(job['data'], datetime.now(tz=ZoneInfo('UTC')), mc_config, job['metadata'])
+    assert f'cid:{shown}_logo' in html
+    assert f'cid:{hidden}_logo' not in html
+
+
+def test_html_without_logo_keys_shows_all_logos(mc_config, logo_files):
+    """Formatter stays compatible with alerts that pass no logo_keys."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    from src.formatters.html_formatter import HTMLFormatter
+
+    df = pd.DataFrame({'full_name': ['John Smith']})
+    html = HTMLFormatter().format(df, datetime.now(tz=ZoneInfo('UTC')), mc_config, {'display_columns': ['full_name']})
+    assert 'cid:prominence_logo' in html
+    assert 'cid:seatraders_logo' in html
+
+
+@pytest.mark.parametrize('logo_keys, expected_cids', [
+    (['seatraders'], ['<seatraders_logo>']),
+    (None, ['<prominence_logo>', '<seatraders_logo>']),
+])
+def test_email_sender_embeds_selected_logos(logo_files, monkeypatch, logo_keys, expected_cids):
+    from unittest.mock import MagicMock
+    from src.notifications.email_sender import EmailSender
+
+    smtp = MagicMock()
+    monkeypatch.setattr('src.notifications.email_sender.smtplib.SMTP_SSL', MagicMock(return_value=smtp))
+    sender = EmailSender('smtp.test.com', 465, 'a@test.com', 'x', company_logos=logo_files)
+
+    sender.send('Subject', 'text', '<p>html</p>', ['to@test.com'], logo_keys=logo_keys)
+
+    msg = smtp.__enter__.return_value.send_message.call_args.args[0]
+    cids = sorted(part['Content-ID'] for part in msg.walk() if part['Content-ID'])
+    assert cids == expected_cids
+
+
+# ---------------------------------------------------------------------------
 # End-to-end run (database and SMTP mocked)
 # ---------------------------------------------------------------------------
 
@@ -415,6 +483,7 @@ def test_run_sends_once_and_tracks(alert, mc_config, mock_event_tracker, mock_em
     assert sent['cc_recipients'] == ['prom1@test.com', 'prom2@test.com', 'internal@test.com']
     assert sent['subject'] == 'AlertDev | PROM STAR Master Change'
     assert 'Captain John Smith assumed command of PROM STAR' in sent['plain_text']
+    assert sent['logo_keys'] == ['prominence']
     assert mock_event_tracker.is_sent('master_change__crew_contract_id_50001__crew_member_id_301')
 
     # Second run: already tracked, nothing sent

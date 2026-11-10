@@ -269,7 +269,8 @@ class BaseAlert(ABC):
                         plain_text=plain_text,
                         html_content=html_content,
                         recipients=recipients,
-                        cc_recipients=cc_recipients
+                        cc_recipients=cc_recipients,
+                        logo_keys=metadata.get('logo_keys')
                     )
                     self.logger.info(f"[OK] Notification {idx} sent successfully")
                 else:

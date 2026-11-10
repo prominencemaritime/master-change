@@ -54,7 +54,8 @@ class EmailSender:
         plain_text: str,
         html_content: str,
         recipients: List[str],
-        cc_recipients: Optional[List[str]] = None
+        cc_recipients: Optional[List[str]] = None,
+        logo_keys: Optional[List[str]] = None
     ) -> None:
         """
         Send email with both plain text and HTML versions.
@@ -65,6 +66,7 @@ class EmailSender:
             html_content: HTML version of email body
             recipients: List of primary recipient email addresses
             cc_recipients: Optional list of CC recipient email addresses
+            logo_keys: company_logos keys to embed (e.g. ['prominence']); None embeds all
 
         Raises:
             ValueError: If no recipients provided
@@ -106,6 +108,8 @@ class EmailSender:
 
         # Attach company logos as embedded images
         for company_name, logo_path in self.company_logos.items():
+            if logo_keys is not None and company_name not in logo_keys:
+                continue
             logo_data, mime_type, filename = self._load_logo(logo_path)
             if logo_data:
                 maintype, subtype = mime_type.split('/')

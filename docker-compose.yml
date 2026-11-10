@@ -12,6 +12,6 @@ services:
       - ./logs:/app/logs
       - ./data:/app/data
       - ./queries:/app/queries
-      - /Users/prominence/.ssh/prominence_user_key_rsa4096:/app/ssh_key:ro
-      - /Users/prominence/.ssh/datalab_prominence_prod.pem:/app/ssh_ubuntu_key:ro
+      - /Users/dskliros/.ssh/prominence_user_key_rsa4096:/app/ssh_key:ro
+      - /Users/dskliros/.ssh/datalab-t3a.pem:/app/ssh_ubuntu_key:ro
     restart: unless-stopped

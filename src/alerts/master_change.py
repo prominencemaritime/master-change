@@ -44,6 +44,13 @@ class MasterChangeAlert(BaseAlert):
     }
     DEFAULT_COMPANY_NAME = 'Prominence Maritime S.A.'
 
+    # Email routing domain -> AlertConfig.company_logos key (logo shown and attached)
+    COMPANY_LOGO_KEYS = {
+        'prominencemaritime.com': 'prominence',
+        'seatraders.com': 'seatraders',
+    }
+    DEFAULT_COMPANY_LOGO_KEY = 'prominence'
+
     def __init__(self, config: AlertConfig):
         """
         Initialise Master Change alert.
@@ -214,6 +221,7 @@ class MasterChangeAlert(BaseAlert):
                     'company_name': self._get_company_name(domain),
                     'display_columns': self.DISPLAY_COLUMNS,
                     'intro_paragraphs': self._build_intro_paragraphs(row),
+                    'logo_keys': [self._get_company_logo_key(domain)],
                 }
             }
             jobs.append(job)
@@ -257,6 +265,12 @@ class MasterChangeAlert(BaseAlert):
     def _get_company_name(self, domain: Optional[str]) -> str:
         """Company name for an email_routing domain."""
         return self.COMPANY_NAMES.get(domain, self.DEFAULT_COMPANY_NAME)
+
+
+
+    def _get_company_logo_key(self, domain: Optional[str]) -> str:
+        """AlertConfig.company_logos key of the company logo for an email_routing domain."""
+        return self.COMPANY_LOGO_KEYS.get(domain, self.DEFAULT_COMPANY_LOGO_KEY)
 
 
     def _build_intro_paragraphs(self, row: pd.Series) -> List[str]:

@@ -12,7 +12,9 @@ Returns one row per Master change that is due for notification:
 
 The preceding (outgoing) Master contract is the one on the same vessel that
 signed on before the incoming contract and signed off most recently; a
-contract that is still open counts as the most recent.
+contract that is still open counts as the most recent. Contracts with an
+identical sign-on are ordered by id, so a duplicate entry is treated as a
+re-contract and reported once.
 
 Bind parameters, supplied by MasterChangeAlert.fetch_data(): rank_id,
 lookback_days, master_change_days.
@@ -96,7 +98,11 @@ WHERE
             o.vessel_id = cc.vessel_id
             AND o.rank_id = cc.rank_id
             AND o.crew_member_id <> cc.crew_member_id
-            AND o.sign_on_date_as_per_office <= ref.now_utc
+            AND (
+                o.sign_on_date_as_per_office < cc.sign_on_date_as_per_office
+                -- Identical sign-on (duplicate entry): the lower id counts as earlier
+                OR (o.sign_on_date_as_per_office = cc.sign_on_date_as_per_office AND o.id < cc.id)
+            )
             AND (
                 o.sign_off_date_as_per_office IS NULL
                 OR o.sign_off_date_as_per_office > ref.now_utc

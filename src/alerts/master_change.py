@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 import pandas as pd
 from sqlalchemy import text
 import logging
+from urllib.parse import urlencode
 
 from src.core.base_alert import BaseAlert
 from src.core.config import AlertConfig
@@ -273,14 +274,30 @@ class MasterChangeAlert(BaseAlert):
         return self.COMPANY_LOGO_KEYS.get(domain, self.DEFAULT_COMPANY_LOGO_KEY)
 
 
+    def _crew_list_url(self, vessel_id: int) -> str:
+        """Return crew list URL link (on date at which link is clicked) associated to a given vessel."""
+        base_url = "https://prominence.orca.tools/crew-list"
+        params = {
+            "filters[0][name]": "onboard_vessel_id",
+            "filters[0][operation]": "=",
+            "filters[0][value]": vessel_id,
+        }
+        return f"{base_url}?{urlencode(params)}"
+
+
     def _build_intro_paragraphs(self, row: pd.Series) -> List[str]:
         """
         Plain-text paragraphs shown above the table (escaped by the HTML formatter).
         """
+        vessel_id = str(row['vessel_id'])
+        url_string = self._crew_list_url(vessel_id)
+        url_link = f'<a href="{url_string}" style="color: #0066cc; text-decoration: none;">{here}</a>'
+
         sign_on_day = str(row['sign_on_date']).split(' ')[0]
         paragraphs = [
             "Dear ICT,",
             f"{self.master_change_days} days have elapsed since Captain {row['full_name']} assumed command of {row['vessel']} (on {sign_on_day}). There is currently no other Master in the crew list. ",
+            f"Click {url_link} for the current crew list.",
         ]
 
         outgoing_master = row.get('outgoing_master', '')

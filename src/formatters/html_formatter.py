@@ -6,7 +6,7 @@ Generates professional HTML emails with embedded logos, tables,
 and responsive design.
 """
 from typing import Dict, List, Optional
-from html import escape as html_escape
+from markupsafe import escape
 import pandas as pd
 from datetime import datetime
 from src.formatters.date_formatter import duration_hours
@@ -456,7 +456,7 @@ class HTMLFormatter:
         Each paragraph is HTML-escaped, so alerts pass plain text.
         """
         body = "\n".join(
-           f'            <p style="margin: 10px 0;">{html_escape(str(p))}</p>'
+           f'            <p style="margin: 10px 0;">{escape(p)}</p>'
            for p in paragraphs
         )
         return f"""

@@ -6,12 +6,33 @@ Generates simple, readable plain text emails as fallback
 for HTML emails or for email clients that don't support HTML.
 """
 from typing import Dict, Optional
+from html import unescape
+import re
 import pandas as pd
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
+_LINK_RE = re.compile(r'<a\s[^>]*?href="([^"]*)"[^>]*>(.*?)</a>', re.IGNORECASE | re.DOTALL)
+_TAG_RE = re.compile(r'<[^>]+>')
+
+
+def _html_to_text(fragment: str) -> str:
+    """
+    Plain-text version of an HTML fragment: links become 'text (url)',
+    other tags are removed and character entities decoded.
+    """
+    def plain(part: str) -> str:
+        return unescape(_TAG_RE.sub('', part))
+
+    parts, pos = [], 0
+    for match in _LINK_RE.finditer(fragment):
+        parts.append(plain(fragment[pos:match.start()]))
+        parts.append(f"{plain(match.group(2))} ({unescape(match.group(1))})")
+        pos = match.end()
+    parts.append(plain(fragment[pos:]))
+    return ''.join(parts)
 
 class TextFormatter:
     """
@@ -59,6 +80,9 @@ class TextFormatter:
         else:
             # Alert-specific intro paragraphs (optional)
             for paragraph in metadata.get('intro_paragraphs') or []:
+                # HTML paragraphs (markupsafe.Markup) are converted; plain strings are used as they are
+                if hasattr(paragraph, '__html__'):
+                    paragraph = _html_to_text(paragraph.__html__())
                 text += f"{paragraph}\n\n"
                 text += f"Found {len(df)} record(s):\n\n"
 

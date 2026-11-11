@@ -282,12 +282,16 @@ def test_route_metadata(alert):
 def test_intro_paragraphs_with_outgoing_master(alert, mc_config):
     mc_config.timezone = 'UTC'
     job = alert.route_notifications(alert.filter_data(make_df(raw_row())))[0]
-    assert job['metadata']['intro_paragraphs'] == [
-        "Dear Colleagues,",
-        "Captain John Smith assumed command of PROM STAR on 2026-01-10. "
-        "14 days have elapsed and no other Master remains on the crew list.",
+    paragraphs = job['metadata']['intro_paragraphs']
+    assert paragraphs[:2] == [
+        "Dear ICT,",
+        "14 days have elapsed since Captain John Smith assumed command of PROM STAR (on 2026-01-10). "
+        "There is currently no other Master in the crew list. ",
+        ]
+    assert paragraphs[2].startswith('Navigate to the <a href="')
+    assert paragraphs[3:] == [
         "The previous Master, Captain Peter Jones, signed off on 2026-01-12.",
-        "Please carry out the actions associated with a change of Master, such as password changes.",
+        "Please carry out any pending actions associated with a change of Master (such as password changes, etc.).",
     ]
 
 
@@ -392,11 +396,55 @@ def test_text_contains_intro_and_numbers_records_from_one(alert, mc_config):
     job = alert.route_notifications(data)[0]
     text = TextFormatter().format(job['data'], datetime.now(tz=ZoneInfo('UTC')), mc_config, job['metadata'])
 
-    assert 'Dear Colleagues,' in text
+    assert 'Dear ICT,' in text
     assert 'Captain John Smith assumed command of PROM STAR' in text
     assert 'Record 1:' in text
     assert 'Record 8:' not in text
-    assert text.index('Dear Colleagues,') < text.index('Found 1 record(s):')
+    assert text.index('Dear ICT,') < text.index('Found 1 record(s):')
+
+
+    # ---------------------------------------------------------------------------
+    # Crew list link
+    # ---------------------------------------------------------------------------
+
+def test_crew_list_url_filters_on_vessel(alert):
+    from urllib.parse import urlparse, parse_qs
+
+    url = urlparse(alert._crew_list_url(11))
+    assert url.path == '/crew-list'
+    assert parse_qs(url.query) == {
+        'filters[0][name]': ['onboard_vessel_id'],
+        'filters[0][operation]': ['='],
+        'filters[0][value]': ['11'],
+    }
+
+
+def test_html_intro_contains_crew_list_link(alert, mc_config):
+    import re
+    from datetime import datetime
+    from html import unescape
+    from zoneinfo import ZoneInfo
+    from src.formatters.html_formatter import HTMLFormatter
+
+    job = alert.route_notifications(alert.filter_data(make_df(raw_row())))[0]
+    html = HTMLFormatter().format(job['data'], datetime.now(tz=ZoneInfo('UTC')), mc_config, job['metadata'])
+
+    links = re.findall(r'<a href="([^"]+)"[^>]*>crew list</a>', html)
+    assert len(links) == 1
+    assert unescape(links[0]) == alert._crew_list_url(11)
+    assert '&lt;a' not in html
+
+
+def test_text_intro_shows_crew_list_url(alert, mc_config):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    from src.formatters.text_formatter import TextFormatter
+
+    job = alert.route_notifications(alert.filter_data(make_df(raw_row())))[0]
+    text = TextFormatter().format(job['data'], datetime.now(tz=ZoneInfo('UTC')), mc_config, job['metadata'])
+
+    assert f"Navigate to the crew list ({alert._crew_list_url(11)}) page." in text
+    assert '<a ' not in text
 
 
 # ---------------------------------------------------------------------------

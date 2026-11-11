@@ -5,6 +5,7 @@ import pandas as pd
 from sqlalchemy import text
 import logging
 from urllib.parse import urlencode
+from markupsafe import Markup
 
 from src.core.base_alert import BaseAlert
 from src.core.config import AlertConfig
@@ -287,17 +288,26 @@ class MasterChangeAlert(BaseAlert):
 
     def _build_intro_paragraphs(self, row: pd.Series) -> List[str]:
         """
-        Plain-text paragraphs shown above the table (escaped by the HTML formatter).
+        Paragraphs shown above the table.
+
+        Plain strings are escaped by the HTML formatter. Paragraphs built with
+        markupsafe.Markup are inserted as HTML, so every value placed in them
+        must go through Markup.format(), which escapes it.
         """
         vessel_id = str(row['vessel_id'])
         url_string = self._crew_list_url(vessel_id)
-        url_link = f'<a href="{url_string}" style="color: #0066cc; text-decoration: none;">{here}</a>'
+
+        url_link = Markup(
+            '<a href="{url_string}" style="color: #0066cc; text-decoration: none;">'
+            'current crew list'
+            '</a>'
+        ).format(url_string=url_string)
 
         sign_on_day = str(row['sign_on_date']).split(' ')[0]
         paragraphs = [
             "Dear ICT,",
-            f"{self.master_change_days} days have elapsed since Captain {row['full_name']} assumed command of {row['vessel']} (on {sign_on_day}). There is currently no other Master in the crew list. ",
-            f"Click {url_link} for the current crew list.",
+            f"{self.master_change_days} days have elapsed since Captain {row['full_name']} assumed command of {row['vessel']} (on {sign_on_day}). There is currently no other Master in the crew list. " +
+            Markup("Navigate to the {url_link} page.").format(url_link=url_link),
         ]
 
         outgoing_master = row.get('outgoing_master', '')
